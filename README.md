@@ -1,6 +1,4 @@
-# CS776-Kerbeus
-
-## Detecting And Preventing Modality Collapse in Multimodal — Kerbeus
+# CS776-Kerbeus (Detecting And Preventing Modality Collapse in Multimodal)
 
 A multimodal deep learning pipeline for skin lesion diagnosis using the **Derm7pt** dataset. The model — **Kerbeus** — fuses dual-image (dermoscopy + clinical) features with structured tabular metadata through cross-modal attention, CLIP-style alignment, and a learnable reliability gate that dynamically re-weights modalities and prevents modality collapse, ensuring results don't rely on a single modality.
 
