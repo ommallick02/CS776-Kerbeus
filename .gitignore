@@ -1,0 +1,38 @@
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# Model checkpoints and weights (regenerate from training)
+*.pt
+*.pth
+kerbeus_best.pt
+kerbeus_v5_best.pt
+
+# Data (Derm7pt dataset — not redistributed)
+release_v0/
+data/
+*.jpg
+*.png
+*.jpeg
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Outputs / logs
+*.log
+runs/
+outputs/
+results/
