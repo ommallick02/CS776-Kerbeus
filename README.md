@@ -192,7 +192,7 @@ Component-wise ablation shows removing individual components consistently degrad
 * `docs/report.pdf`: The detailed academic report.
 
 
-* `src/app.py`: A Streamlit web application providing a user interface for multimodal inference, OOD testing (blur/masking), and GradCAM interpretability[cite: 2].
+* `src/app.py`: A Streamlit web application providing a user interface for multimodal inference, OOD testing (blur/masking), and GradCAM interpretability.
 
 ---
 
@@ -202,13 +202,13 @@ Ensure all dependencies listed in `requirements.txt` are installed.
 
 **Core ML Dependencies:**
 
-* `torch >= 2.0`, `torchvision`[cite: 1, 2]
-* `numpy`, `pandas`, `Pillow`, `scikit-learn`, `tqdm`[cite: 1, 2]
+* `torch >= 2.0`, `torchvision`
+* `numpy`, `pandas`, `Pillow`, `scikit-learn`, `tqdm`
 
 **Web Application Dependencies:**
 
-* `streamlit`, `joblib`[cite: 2]
-* *(Optional for visual explanations)* `grad-cam`, `opencv-python-headless`[cite: 2]
+* `streamlit`, `joblib`
+* *(Optional for visual explanations)* `grad-cam`, `opencv-python-headless`
 
 ---
 
@@ -216,7 +216,7 @@ Ensure all dependencies listed in `requirements.txt` are installed.
 
 ### 1. Interactive Application (Streamlit)
 
-To run the interactive UI, ensure your model weights (`model_full.pt`, `model.pt`), preprocessors, and test images are placed inside the `src/` directory (or update the paths in `app.py`)[cite: 2]. Then, run:
+To run the interactive UI, ensure your model weights (`model_full.pt`, `model.pt`), preprocessors, and test images are placed inside the `src/` directory (or update the paths in `app.py`). Then, run:
 
 ```bash
 streamlit run src/app.py
@@ -225,9 +225,9 @@ streamlit run src/app.py
 
 **Features included in the app:**
 
-* **Modality Configuration:** Test the model using Full Modalities, or easily exclude Tabular Data or Images[cite: 2].
-* **Ablation / OOD Testing:** Dynamically apply Gaussian Blur (σ) to images or mask tabular features (in %) to test model reliability[cite: 2].
-* **Interpretability:** If `pytorch_grad_cam` is installed, you can generate feature explanations (heatmaps) for both dermoscopy and clinical images to see where the model focuses[cite: 2].
+* **Modality Configuration:** Test the model using Full Modalities, or easily exclude Tabular Data or Images.
+* **Ablation / OOD Testing:** Dynamically apply Gaussian Blur (σ) to images or mask tabular features (in %) to test model reliability.
+* **Interpretability:** If `pytorch_grad_cam` is installed, you can generate feature explanations (heatmaps) for both dermoscopy and clinical images to see where the model focuses.
 
 ### 2. Training Pipeline (Jupyter Notebook)
 
@@ -255,4 +255,4 @@ During training, the following checkpoints are generated:
 * **`kerbeus_v5_best.pt`** — best model from Baseline++.
 
 
-* **`kerbeus_best.pt`** — final Kerbeus model after all 4 phases. *(Note: In the app, this is referenced as `model.pt` and `model_full.pt`)*[cite: 2].
+* **`kerbeus_best.pt`** — final Kerbeus model after all 4 phases. *(Note: In the app, this is referenced as `model.pt` and `model_full.pt`)*.
