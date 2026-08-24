@@ -1,26 +1,27 @@
-# CS776-Kerbeus (Detecting And Preventing Modality Collapse in Multimodal)
+# CS776-Kerbeus
+
+## Detecting And Preventing Modality Collapse in Multimodal — Kerbeus
 
 A multimodal deep learning pipeline for skin lesion diagnosis using the **Derm7pt** dataset. The model — **Kerbeus** — fuses dual-image (dermoscopy + clinical) features with structured tabular metadata through cross-modal attention, CLIP-style alignment, and a learnable reliability gate that dynamically re-weights modalities and prevents modality collapse, ensuring results don't rely on a single modality.
 
-**Course:** CS776 (Deep Learning for Computer Vision), IIT Kanpur  
+**Course:** CS776 (Deep Learning for Computer Vision), IIT Kanpur
+
 **Group:** 9
 
 ---
 
 ## Table of Contents
 
-- [Quick Results](#quick-results)
-- [Overview](#overview)
-- [Dataset](#dataset)
-- [Architecture](#architecture)
-- [Training Strategy](#training-strategy)
-- [Ablation Study](#ablation-study)
-- [Project Structure](#project-structure)
-- [Requirements](#requirements)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Outputs & Checkpoints](#outputs--checkpoints)
-- [Evaluation & Reporting](#evaluation--reporting)
+* [Quick Results](https://www.google.com/search?q=%23quick-results)
+* [Overview](https://www.google.com/search?q=%23overview)
+* [Dataset](https://www.google.com/search?q=%23dataset)
+* [Architecture](https://www.google.com/search?q=%23architecture)
+* [Training Strategy](https://www.google.com/search?q=%23training-strategy)
+* [Ablation Study](https://www.google.com/search?q=%23ablation-study)
+* [Project Structure](https://www.google.com/search?q=%23project-structure)
+* [Requirements](https://www.google.com/search?q=%23requirements)
+* [Usage](https://www.google.com/search?q=%23usage)
+* [Outputs & Checkpoints](https://www.google.com/search?q=%23outputs--checkpoints)
 
 ---
 
@@ -29,7 +30,7 @@ A multimodal deep learning pipeline for skin lesion diagnosis using the **Derm7p
 **Kerbeus vs. Baseline** on Derm7pt Test Set:
 
 | Metric | Baseline | Kerbeus | Improvement |
-|--------|----------|---------|-------------|
+| --- | --- | --- | --- |
 | **Accuracy** | 67.85% | **83.04%** | **+15.19%** |
 | **Macro-F1** | 0.4757 | **0.7311** | **+0.2554** |
 | **Weighted-F1** | 0.6653 | **0.8253** | **+0.1600** |
@@ -37,7 +38,7 @@ A multimodal deep learning pipeline for skin lesion diagnosis using the **Derm7p
 
 **Key insight:** The baseline suffers from severe **modality collapse** — relying almost entirely on image features while ignoring tabular metadata. Kerbeus solves this through adaptive fusion and gradient balancing, achieving both higher accuracy and balanced multimodal contribution.
 
-See the full report for detailed class-wise performance, ablation studies, and robustness analysis.
+See the full report in the `docs/` folder for detailed class-wise performance, ablation studies, and robustness analysis.
 
 ---
 
@@ -46,7 +47,11 @@ See the full report for detailed class-wise performance, ablation studies, and r
 Kerbeus addresses two core failure modes common in multimodal medical imaging models:
 
 1. **Modality collapse** — the model ignores tabular features and relies almost entirely on image features.
+
+
 2. **Fragility under degradation** — performance degrades sharply when one modality is noisy or missing at inference time.
+
+
 
 It does so by combining cross-modal attention fusion, a contrastive CLIP alignment head, and a curriculum-trained **reliability gate** that learns to down-weight unreliable modalities at inference time.
 
@@ -56,58 +61,57 @@ It does so by combining cross-modal attention fusion, a contrastive CLIP alignme
 
 **Derm7pt** (7-Point Checklist Dermoscopy Dataset)
 
-| Split      | Images       |
-|------------|--------------|
-| Train      |     376      |
-| Validation |     181      |
-| Test       |     355      |
-
-**Expected directory layout:**
-```
-release_v0/
-├── images/
-├── meta/
-│   ├── meta.csv
-│   ├── train_indexes.csv
-│   ├── valid_indexes.csv
-│   └── test_indexes.csv
-```
-
-> On Kaggle: `/kaggle/input/datasets/menakamohanakumar/derm7pt/release_v0`
+| Split | Images |
+| --- | --- |
+| Train | 376 |
+| Validation | 181 |
+| Test | 355 |
 
 ### Target Classes (merged)
 
 | Label | Original Diagnoses |
-|-------|--------------------|
-| `MEL`  | Melanoma (all subtypes + metastasis) |
-| `NEV`  | Clark / Combined / Congenital / Dermal / Recurrent / Reed / Blue Nevus |
-| `BCC`  | Basal Cell Carcinoma |
-| `SK`   | Seborrheic Keratosis |
+| --- | --- |
+| `MEL` | Melanoma (all subtypes + metastasis) |
+| `NEV` | Clark / Combined / Congenital / Dermal / Recurrent / Reed / Blue Nevus |
+| `BCC` | Basal Cell Carcinoma |
+| `SK` | Seborrheic Keratosis |
 | `MISC` | Dermatofibroma, Lentigo, Melanosis, Vascular Lesion, Miscellaneous |
+
+Note: The table above reflects the merged target classes used for the project.
 
 ### Tabular Features
 
-- **Categorical (11):** `vascular_structures`, `blue_whitish_veil`, `pigment_network`, `management`, `streaks`, `dots_and_globules`, `elevation`, `regression_structures`, `pigmentation`, `level_of_diagnostic_difficulty`, `location`
-- **Numerical (1):** `seven_point_score`
+* **Categorical (11):** `vascular_structures`, `blue_whitish_veil`, `pigment_network`, `management`, `streaks`, `dots_and_globules`, `elevation`, `regression_structures`, `pigmentation`, `level_of_diagnostic_difficulty`, `location`.
+
+
+* **Numerical (1):** `seven_point_score`.
+
+
 
 ---
 
 ## Architecture
 
-### Kerbeus Model
+See **`docs/report.pdf`** (Figure 2) for the full architecture diagram with all component connections.
 
-See **`report.pdf`** (Figure 2) for the full architecture diagram with all component connections.
+* **`InceptionBase`**: Shared InceptionV3 feature extractor (aux logits disabled). Two instances — one for dermoscopy, one for clinical images.
 
-### Components
 
-| Component | Description |
-|-----------|-------------|
-| `InceptionBase` | Shared InceptionV3 feature extractor (aux logits disabled). Two instances — one for dermoscopy, one for clinical images. |
-| `DiagnosisMultimodalNet` | Dual-backbone image branch. Produces per-image logits (`out_d`, `out_c`), a combined image feature (`img_feat`), and per-stream GAP vectors. |
-| `FTTransformerEncoder` | Feature Tokenisation Transformer. Each tabular feature becomes a learned token; positional biases and a TransformerEncoder with `norm_first=True` produce `tab_feat`. |
-| `CrossModalAttentionFusion` | Projects image and tabular features to `D_MODEL=256`, performs 2-token self-attention, and concatenates to form the fused representation. |
-| `TripleCLIPHead` | Contrastive alignment that pulls image and tabular representations together in embedding space. |
-| `ReliabilityHead` | Trained in Phase 4. Classifies each modality as clean / ID-perturbed / OOD-perturbed and outputs soft gate weights `gate_w_img`, `gate_w_tab`. |
+* **`DiagnosisMultimodalNet`**: Dual-backbone image branch.
+
+
+* **`FTTransformerEncoder`**: Feature Tokenisation Transformer for tabular metadata.
+
+
+* **`CrossModalAttentionFusion`**: Projects image and tabular features to `D_MODEL=256`, performs 2-token self-attention, and concatenates them.
+
+
+* **`TripleCLIPHead`**: Contrastive alignment that pulls image and tabular representations together.
+
+
+* **`ReliabilityHead`**: Classifies each modality as clean / ID-perturbed / OOD-perturbed and outputs soft gate weights.
+
+
 
 ---
 
@@ -117,61 +121,38 @@ Kerbeus is trained in two stages (**Stage A** and **Stage B**), totalling four p
 
 ### Stage A — Clean Training (Phases 1–3)
 
-| Phase | Epochs | What is trained | Notes |
-|-------|--------|-----------------|-------|
-| 1 | 1–5 | Fusion + FT-Transformer only | Image backbone frozen |
-| 2 | 6–30 | Full model | All components unfrozen |
-| 3 | 31–50 | Full model (continued) | Early stopping patience = 7 |
+* **Phase 1 (Epochs 1-5):** Fusion + FT-Transformer only (Image backbone frozen).
 
-- **Loss:** `AsymmetricLoss` (γ⁻=2, γ⁺=1) to handle class imbalance
-- **Optimiser:** AdamW with per-component learning rates
-- **Scheduler:** CosineAnnealingLR
-- **Sampler:** `WeightedRandomSampler` for per-class balance
-- **Mixed precision:** PyTorch AMP (`GradScaler`)
-- **Checkpoint:** `kerbeus_v5_best.pt`
+
+* **Phase 2 (Epochs 6-30):** Full model (All components unfrozen).
+
+
+* **Phase 3 (Epochs 31-50):** Full model (continued) with Early stopping patience = 7.
+
+
 
 ### Stage B — Curriculum Training for Reliability head (Phase 4)
 
-The reliability head is introduced. Training data is served through `PerturbedCurriculumDataset`, which draws samples from three distributions:
+The reliability head is introduced and trained using the `PerturbedCurriculumDataset`.
 
-| Perturbation Type | Image | Tabular |
-|-------------------|-------|---------|
-| **Clean** | — | — |
-| **ID** | Gaussian blur σ ∈ [0.05, 0.20], Gaussian noise, random occlusion | Random feature masking 10–40% |
-| **OOD** | Strong blur σ=7, noise σ=0.40, occlusion 30% | Full mask (100%), feature shuffle |
+* **Clean:** No perturbations.
 
-- **Reliability loss** guides the gate head (`λ_rel = 0.30`)
-- A **gradient balancer** (`FRAG_ALPHA=0.3`) prevents image-gradient dominance
-- **Checkpoint:** `kerbeus_best.pt`
 
-### Key Hyperparameters
+* **ID:** Gaussian blur σ ∈ [0.05, 0.20], Gaussian noise, random occlusion for images; Random feature masking 10–40% for tabular data.
 
-| Parameter | Value |
-|-----------|-------|
-| Image size | 299 × 299 |
-| Batch size | 8 |
-| LR (image backbone) | 1e-4 |
-| LR (tabular) | 1e-3 |
-| LR (fusion) | 3e-4 |
-| LR (attention) | 5e-5 |
-| Weight decay | 1e-4 |
-| FT-Transformer embedding dim | 16 |
-| FT-Transformer hidden dim | 128 |
-| FT-Transformer heads / layers | 4 / 3 |
-| Cross-attention D_MODEL | 256 |
-| Cross-attention heads | 8 |
-| CLIP embedding dim | 512 |
-| CLIP loss weight (λ) | 0.05 |
-| Seed | 7 |
+
+* **OOD:** Strong blur σ=7, noise σ=0.40, occlusion 30% for images; Full mask (100%), feature shuffle for tabular data.
+
+
 
 ---
 
 ## Ablation Study
 
-Kerbeus is designed with multiple mechanisms to prevent modality collapse. Component-wise ablation (removing each mechanism individually) shows:
+Component-wise ablation shows removing individual components consistently degrades performance, highlighting that each mechanism contributes meaningfully. The **most critical** is the cross-attention fusion combined with gradient balancing.
 
 | Model Variant | Macro-F1 |
-|---------------|----------|
+| --- | --- |
 | Kerbeus (Full Model) | **0.7311** |
 | No Cross-Attention | 0.6827 |
 | No CLIP Alignment | 0.6586 |
@@ -180,135 +161,98 @@ Kerbeus is designed with multiple mechanisms to prevent modality collapse. Compo
 | No Fragility Sampling | 0.6353 |
 | No Gradient Balancing | 0.6797 |
 
-**Finding:** Removing individual components consistently degrades performance, highlighting that each mechanism contributes meaningfully. The **most critical** is the cross-attention fusion combined with gradient balancing.
-
 ---
 
 ## Project Structure
 
+```text
+.
+├── docs/
+│   └── report.pdf
+├── notebooks/
+│   └── kerbeus.ipynb
+├── src/
+│   ├── app.py
+│   ├── tabular_preprocessor.pkl
+│   ├── model_full.pt
+│   ├── model.pt
+│   ├── meta.csv
+│   ├── test_indexes.csv
+│   └── test_images/
+│       ├── derm/
+│       └── clinical/
+├── requirements.txt
+└── README.md
+
 ```
-kerbeus.ipynb
-│
-├── Cell 1   — Imports & Setup
-├── Cell 2   — Global Config (CFG, CURR, DEMO)
-├── Cell 3   — Data Pipeline
-│              TabularPreprocessor · prepare_data · get_transforms
-│              Derm7ptDataset · make_class_sampler
-├── Cell 4   — Loss & Metrics
-│              AsymmetricLoss · compute_metrics · print_metrics
-├── Cell 5   — Image Backbone
-│              InceptionBase · DiagnosisMultimodalNet
-├── Cell 6   — Shared Encoders
-│              FTTransformerEncoder · CrossModalAttentionFusion
-│              TripleCLIPHead · ReliabilityHead
-├── Cell 7   — Ablation Model Variants
-│              BaselineFusionModel · ConcatMLPFusion
-│              CrossAttnOnlyFusion · CLIPFusion
-├── Cell 8   — Kerbeus Full Model
-├── Cell 9   — Curriculum Dataset
-│              PerturbedCurriculumDataset · AugmentedTestDataset
-├── Cell 10  — Training Utilities
-│              evaluate · compute_logit_contributions
-│              print_modality_balance · evaluate_with_ablation
-├── Cell 11  — Baseline Training Loop
-├── Cell 12  — Kerbeus Phases 1–3 Training Loop
-├── Cell 13  — Kerbeus Phase 4 (Curriculum) Training Loop
-├── Cell 14  — Reporting
-│              print_ablation_report · print_final_report
-├── Cell 15  — Per-Sample Reliability Gate Demo
-└── Cell 16  — main() — full pipeline orchestration
-```
+
+* `notebooks/kerbeus.ipynb`: Contains the original model definition, data pipelines, training loops, and curriculum evaluation.
+
+
+* `docs/report.pdf`: The detailed academic report.
+
+
+* `src/app.py`: A Streamlit web application providing a user interface for multimodal inference, OOD testing (blur/masking), and GradCAM interpretability[cite: 2].
 
 ---
 
 ## Requirements
 
-```
-torch >= 2.0
-torchvision
-numpy
-pandas
-Pillow
-scikit-learn
-tqdm
-```
+Ensure all dependencies listed in `requirements.txt` are installed.
 
-> Designed to run on **Kaggle** with GPU (tested on T4). `CFG.DEVICE` auto-detects CUDA.
+**Core ML Dependencies:**
+
+* `torch >= 2.0`, `torchvision`[cite: 1, 2]
+* `numpy`, `pandas`, `Pillow`, `scikit-learn`, `tqdm`[cite: 1, 2]
+
+**Web Application Dependencies:**
+
+* `streamlit`, `joblib`[cite: 2]
+* *(Optional for visual explanations)* `grad-cam`, `opencv-python-headless`[cite: 2]
 
 ---
 
 ## Usage
 
-### Full Pipeline
+### 1. Interactive Application (Streamlit)
 
-Run all cells sequentially, then execute `main()` in Cell 16:
+To run the interactive UI, ensure your model weights (`model_full.pt`, `model.pt`), preprocessors, and test images are placed inside the `src/` directory (or update the paths in `app.py`)[cite: 2]. Then, run:
 
-```python
-main()
+```bash
+streamlit run src/app.py
+
 ```
 
-`main()` runs the following steps in order:
+**Features included in the app:**
 
-1. **Baseline** — trains and evaluates `BaselineFusionModel`
-2. **Kerbeus** — Stage A (3-phase clean) → Stage B (Phase 4 curriculum)
-3. **Inference Ablations** — Image Only / Tabular Only on the trained Kerbeus checkpoint
-4. **Final Report** — performance comparison, gradient dominance, logit contribution, robustness delta
-5. **Demo** — per-sample reliability gate response to progressive perturbation
+* **Modality Configuration:** Test the model using Full Modalities, or easily exclude Tabular Data or Images[cite: 2].
+* **Ablation / OOD Testing:** Dynamically apply Gaussian Blur (σ) to images or mask tabular features (in %) to test model reliability[cite: 2].
+* **Interpretability:** If `pytorch_grad_cam` is installed, you can generate feature explanations (heatmaps) for both dermoscopy and clinical images to see where the model focuses[cite: 2].
 
-### Reliability Gate Demo Only
+### 2. Training Pipeline (Jupyter Notebook)
 
-```python
-per_sample_reliability_demo()
-```
+To run the training pipeline, open `notebooks/kerbeus.ipynb` and execute the cells sequentially. Running the `main()` function in the final cell will trigger:
 
-Requires `kerbeus_best.pt` to exist. Iterates over test samples (one per class), applies increasing image blur and tabular masking, and prints how `gate_w_img` / `gate_w_tab` respond.
+1. Baseline training and evaluation.
 
----
 
-## Configuration
+2. Kerbeus Stage A (clean) and Stage B (curriculum) training.
 
-All global settings live in three dataclasses:
 
-- **`CFG`** — paths, model dimensions, training schedule, learning rates, checkpoint names
-- **`CURR`** — Phase 4 / curriculum-specific settings (perturbation ranges, loss weights)
-- **`DEMO`** — demo sampling parameters (samples per class, blur sigmas, mask fractions)
+3. Inference ablations.
 
-To adapt to a local environment, update `CFG.BASE`, `CFG.IMG_DIR`, and `CFG.CKPT_DIR`.
+
+4. Generation of the final report.
+
+
 
 ---
 
 ## Outputs & Checkpoints
 
-During training, the following checkpoints are saved:
+During training, the following checkpoints are generated:
 
-- **`kerbeus_v5_best.pt`** — best model from Baseline++ (enhanced tabular encoder)
-- **`kerbeus_best.pt`** — final Kerbeus model after all 4 phases
+* **`kerbeus_v5_best.pt`** — best model from Baseline++.
 
-Test-phase predictions and metrics are logged and displayed in the final report.
 
----
-
-## Evaluation & Reporting
-
-The model is evaluated using:
-
-- **Accuracy, Precision, Recall** — per-class and macro-averaged
-- **Macro-F1 & Weighted-F1** — overall fairness metrics
-- **Modality contribution %** — image vs. tabular logit contributions
-- **Gradient analysis** — gradient norm ratios to diagnose collapse
-- **Robustness under perturbation** — in-distribution (ID) and out-of-distribution (OOD) degradation
-- **Reliability gate behavior** — how weights shift under modal degradation
-
-See **`report.pdf`** for full tables, figures, and detailed analysis.
-
----
-
-## References
-
-This work addresses multimodal collapse in medical imaging by building on:
-- Cross-modal attention fusion
-- Contrastive representation alignment (CLIP-style)
-- Curriculum learning for robustness
-- Gradient-aware training
-
-For more details, see the course report: **`report.pdf`**
+* **`kerbeus_best.pt`** — final Kerbeus model after all 4 phases. *(Note: In the app, this is referenced as `model.pt` and `model_full.pt`)*[cite: 2].

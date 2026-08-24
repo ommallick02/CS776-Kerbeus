@@ -1,0 +1,10 @@
+numpy<2.0.0
+joblib
+pandas
+torch==2.2.2
+torchvision==0.17.2
+Pillow
+scikit-learn
+streamlit
+opencv-python-headless
+grad-cam
